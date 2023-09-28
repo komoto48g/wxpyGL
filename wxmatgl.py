@@ -11,11 +11,14 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 ## from OpenGL.GLUT.freeglut import *
-import numpy as np
+
 import threading
+import numpy as np
 import wx
-import mwx
-from glcamera import Camera
+
+from mwx import FSM
+from .glcamera import Camera
+
 
 N = np.zeros(4)
 R,G,B,A = np.identity(4)
@@ -106,7 +109,7 @@ def regulate_key(key):
 class basic_stream(object):
     """The basic stream
 
-    Attribtues:
+    Attributes:
            name : window title
          pos[2] : window position (x, y)
         size[2] : window size (width, height)
@@ -123,9 +126,8 @@ class basic_stream(object):
         self.__button = ''
         self.__oblist = []
         
-        self.handler = mwx.FSM({
+        self.handler = FSM({
                 0 : {
-                  'f12 pressed' : (0, lambda *v: self.shellframe.Show()),
                  'home pressed' : (0, self.OnHomePosition),
              '*Lbutton pressed' : (1, self.OnDragBegin),
              '*Rbutton pressed' : (2, self.OnDragBegin),
@@ -212,14 +214,7 @@ class basic_stream(object):
         self.__oblist += list(obj)
     
     def run(self):
-        t = threading.Thread(target=self.deb)
-        t.start()
         glutMainLoop()
-    
-    def deb(self):
-        app = wx.App()
-        self.shellframe = mwx.ShellFrame(None, target=self)
-        app.MainLoop()
     
     ## --------------------------------
     ## glut actions

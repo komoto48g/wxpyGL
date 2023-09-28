@@ -3,9 +3,11 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+
 import numpy as np
 from numpy import linalg
 from numpy import pi,sin,cos,tan,arctan
+
 
 N = np.zeros(4)
 R,G,B,A = np.identity(4)

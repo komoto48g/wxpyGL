@@ -4,7 +4,12 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 ## from OpenGL.GLUT.freeglut import *
+
 import numpy as np
+from numpy import pi
+
+from .glmaterial import white
+
 
 N = np.zeros(4)
 R,G,B,A = np.identity(4)
@@ -36,7 +41,7 @@ class Object(object):
         if pos is None:
             pos = O
         self.pos = pos
-        self.shade = shade or Materials.white
+        self.shade = shade or white
         self.style = style or Object.MWIRE | Object.MSOLID | Object.MSHADE
         self.visible = visible
     

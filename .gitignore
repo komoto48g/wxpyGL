@@ -1,14 +1,24 @@
+*.jssn
+*.ssn
 *.db
 *.lnk
 *.pptx
 *.docx
 *.xlsx
 *.ssn
+*.bat
+*.cmd
 *.l
 *.log
 *.txt
 Makefile
 exclude_files
+
+# Resources
+test*/
+icons*/
+vclips*/
+docfiles*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
