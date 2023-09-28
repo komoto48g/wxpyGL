@@ -1,12 +1,5 @@
 #! python3
 # -*- coding: utf8 -*-
-"""User-interface for GL basic-stream
-
-Author: Kazuya O'moto <komoto@jeol.co.jp>
-"""
-__version__ = "0.1"
-__author__ = "Kazuya O'moto <komoto@jeol.co.jp>"
-
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -138,7 +131,6 @@ class basic_stream:
             },
             default = 0,
         )
-        self.handler.debug = 4
     
     def open(self, name, size=None, pos=None, color=None):
         self.name = name.encode() #<class 'bytes'>
@@ -166,10 +158,6 @@ class basic_stream:
         ## depth test
         glEnable(GL_DEPTH_TEST)
         
-        ## alpha-blending
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        
         ## standard environ light
         glEnable(GL_LIGHT0)
         glEnable(GL_LIGHTING)
@@ -196,6 +184,7 @@ class basic_stream:
         glutMouseFunc(self.on_mouse)
         glutMotionFunc(self.on_motion)
         glutVisibilityFunc(self.on_visible)
+        glutWMCloseFunc(self.close)
         glutIdleFunc(None)
         
         return self
@@ -204,7 +193,14 @@ class basic_stream:
         self.__oblist += list(obj)
     
     def run(self):
+        glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
+                      ## GLUT_ACTION_CONTINUE_EXECUTION,
+                      GLUT_ACTION_GLUTMAINLOOP_RETURNS,
+                      )
         glutMainLoop()
+    
+    def close(self):
+        glutLeaveMainLoop()
     
     ## --------------------------------
     ## glut actions
