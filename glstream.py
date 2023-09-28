@@ -96,16 +96,16 @@ def regulate_key(key):
                .replace("S-C-", "C-S-"))
 
 
-class basic_stream(object):
+class basic_stream:
     """The basic stream
-
+    
     Attributes:
-           name : window title
-         pos[2] : window position (x, y)
+        name    : window title
+        pos[2]  : window position (x, y)
         size[2] : window size (width, height)
-       color[4] : back color
-         camera : singlet camera model
-            dpu : dot per logical length
+        color[4]: back color
+        camera  : singlet camera model
+        dpu     : dot per logical length
     """
     dpu = property(lambda self: self.size[1] / 2 / self.camera.h2_)
     

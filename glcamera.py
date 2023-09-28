@@ -6,30 +6,28 @@ from OpenGL.GLUT import *
 
 import numpy as np
 from numpy import linalg
-from numpy import pi,sin,cos,tan,arctan
+from numpy import pi,sin,cos,tan
 
-
-N = np.zeros(4)
-R,G,B,A = np.identity(4)
 
 O = np.zeros(3)
 X,Y,Z = np.identity(3)
 
 
-class Camera(object):
-    """Camera object
-
+class Camera:
+    """Camera object.
+    
     Attributes:
-         parent : stream object
-           mode : [0]-orthogonal [1]-perspective 
-          fovy_ : fov Y angle [rad]
-           e2c_ : logical camera length
-            h2_ : logical half height of view (h/2)
-      axes[3,3] : logical base-axis (x,y,z)
-         eye[3] : logical eye point (Z)
-         lpc[3] : logical look-at center (O)
-       depth[2] : logical (near, far)
-      screen[2] : screen size of viewport (w,h)
+        parent  : stream object
+        mode    : [0]-orthogonal [1]-perspective 
+        fovy_   : fov-y angle [rad]
+        e2c_    : logical camera length
+        h2_     : logical half height of view (h/2)
+        axes[3,3]: logical base-axes (x,y,z)
+        eye[3]  : logical eye point (z)
+        lpc[3]  : logical look-at center (o)
+        depth[2]: logical focus (near, far)
+        screen[2]: screen size of viewport (w, h)
+        fovy_range[2]: field of view in y-direction
     """
     ## fov = property(lambda self: self.__parent.size)
     ## fovr = property(lambda self: self.fov[0] / self.fov[1])
@@ -114,10 +112,10 @@ class Camera(object):
     
     def zoom(self, rate):
         """shorten camera length by rate"""
-        l = self.e2c_ / rate
-        if self.depth[0] < l < self.depth[1]:
-            self.eye += self.axes[2] * (l - self.e2c_)
-            self.e2c_ = l
+        L = self.e2c_ / rate
+        if self.depth[0] < L < self.depth[1]:
+            self.eye += self.axes[2] * (L - self.e2c_)
+            self.e2c_ = L
             return True
     
     def magnify(self, angle):
