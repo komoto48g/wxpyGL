@@ -98,16 +98,25 @@ class basic_stream:
         size[2] : window size (width, height)
         color[4]: back color
         camera  : singlet camera model
-        dpu     : dot per logical length
     """
-    dpu = property(lambda self: self.size[1] / 2 / self.camera.h2_)
+    @property
+    def dpu(self):
+        """Dots per unit:logical length."""
+        return self.size[1] / 2 / self.camera.h2_
     
-    def __init__(self):
+    def __init__(self, name, pos=None, size=None, color=None):
         glutInit(sys.argv)
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+        
+        self.name = name.encode()
+        self.pos = pos or (0, 0)
+        self.size = size or (300, 300)
+        self.color = color or (0, 0, 0, 0)
+        self.camera = Camera(self)
+        self.objects = []
         
         self.__key = ''
         self.__button = ''
-        self.__oblist = []
         
         self.handler = FSM({
                 0 : {
@@ -132,24 +141,26 @@ class basic_stream:
             default = 0,
         )
     
-    def open(self, name, size=None, pos=None, color=None):
-        self.name = name.encode() #<class 'bytes'>
-        self.pos = pos or (0, 0)
-        self.size = size or (300, 300)
-        self.color = color or (0, 0, 0, 0)
-        
-        glutInitWindowSize(*self.size)
+    def open(self):
+        ## Create glut window
         glutInitWindowPosition(*self.pos)
-        
-        ## Set context here (single or double buffer, depthtest, etc.)
-        
-        ## glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE)
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
-        
+        glutInitWindowSize(*self.size)
         glutCreateWindow(self.name)
-        glClearColor(*self.color)
         
-        self.camera = Camera(self)
+        ## glut event handlers
+        glutDisplayFunc(self.on_display)
+        glutReshapeFunc(self.on_reshape)
+        glutKeyboardFunc(self.on_key_press)
+        glutKeyboardUpFunc(self.on_key_release)
+        glutSpecialFunc(self.on_speckey_press)
+        glutSpecialUpFunc(self.on_speckey_release)
+        glutMouseFunc(self.on_mouse)
+        glutMotionFunc(self.on_motion)
+        glutVisibilityFunc(self.on_visible)
+        glutWMCloseFunc(self.close)
+        glutIdleFunc(None)
+        
+        glClearColor(*self.color)
         
         ## culling
         glCullFace(GL_BACK)
@@ -165,7 +176,6 @@ class basic_stream:
         ## initialize GL context
         glRenderMode(GL_RENDER)
         glShadeModel(GL_SMOOTH)
-        ## glShadeModel(GL_FLAT)
         
         ## hints
         glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
@@ -173,24 +183,6 @@ class basic_stream:
         glHint(GL_FOG_HINT, GL_NICEST)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
-        
-        ## glut connect funcs
-        glutDisplayFunc(self.on_display)
-        glutReshapeFunc(self.on_reshape)
-        glutKeyboardFunc(self.on_key_press)
-        glutKeyboardUpFunc(self.on_key_release)
-        glutSpecialFunc(self.on_specialkey_press)
-        glutSpecialUpFunc(self.on_specialkey_release)
-        glutMouseFunc(self.on_mouse)
-        glutMotionFunc(self.on_motion)
-        glutVisibilityFunc(self.on_visible)
-        glutWMCloseFunc(self.close)
-        glutIdleFunc(None)
-        
-        return self
-    
-    def add_objects(self, obj):
-        self.__oblist += list(obj)
     
     def run(self):
         glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
@@ -202,8 +194,11 @@ class basic_stream:
     def close(self):
         glutLeaveMainLoop()
     
+    def draw(self):
+        glutPostRedisplay()
+    
     ## --------------------------------
-    ## glut actions
+    ## glut event handlers
     ## --------------------------------
     
     def on_display(self):
@@ -211,8 +206,8 @@ class basic_stream:
         w, h = self.size
         if w and h:
             self.camera.set_view(w, h)
-            for p in self.__oblist: # draw all objects
-                p()
+            for obj in self.objects: # draw objects
+                obj()
             glutSwapBuffers()
     
     def on_reshape(self, w, h):
@@ -229,12 +224,12 @@ class basic_stream:
         self.__key = ''
         self.handler('{} released'.format(key), x, y)
     
-    def on_specialkey_press(self, code, x, y):
+    def on_speckey_press(self, code, x, y):
         key = get_speckey(code)
         self.__key = regulate_key(key + '+')
         self.handler('{} pressed'.format(key), x, y)
     
-    def on_specialkey_release(self, code, x, y):
+    def on_speckey_release(self, code, x, y):
         key = get_speckey(code)
         self.__key = ''
         self.handler('{} released'.format(key), x, y)
@@ -270,7 +265,7 @@ class basic_stream:
     
     def OnHomePosition(self, x, y):
         self.camera.set_axes()
-        glutPostRedisplay()
+        self.draw()
     
     def OnDragBegin(self, x, y):
         self._lx = x
@@ -285,17 +280,17 @@ class basic_stream:
         self.camera.rotate(-(x-self._lx)/d, (y-self._ly)/d)
         self._lx = x
         self._ly = y
-        glutPostRedisplay()
+        self.draw()
     
     def OnDragEnd(self, x, y):
-        glutPostRedisplay()
+        self.draw()
     
     def OnShiftMove(self, x, y):
         d = self.dpu
         self.camera.shift(-(x-self._lx)/d, (y-self._ly)/d)
         self._lx = x
         self._ly = y
-        glutPostRedisplay()
+        self.draw()
     
     def OnTiltMove(self, x, y):
         vx = x - self.lcx
@@ -309,26 +304,26 @@ class basic_stream:
         self._ly = y
         self.lvx = vx
         self.lvy = vy
-        glutPostRedisplay()
+        self.draw()
     
     def OnZoomView(self, x, y):
         ds = (x-self._lx + self._ly-y) / 100 # zoom
         self.camera.zoom(1 + ds)
         self._lx = x
         self._ly = y
-        glutPostRedisplay()
+        self.draw()
     
     def OnZoomFovy(self, x, y):
         ds = (x-self._lx + self._ly-y) / 100 # angle
         self.camera.magnify(ds)
         self._lx = x
         self._ly = y
-        glutPostRedisplay()
+        self.draw()
     
     def OnScrollZoomUp(self, x, y):
         self.camera.zoom(1.25)
-        glutPostRedisplay()
+        self.draw()
     
     def OnScrollZoomDown(self, x, y):
         self.camera.zoom(1/1.25)
-        glutPostRedisplay()
+        self.draw()
