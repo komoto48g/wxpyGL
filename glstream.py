@@ -12,19 +12,9 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 ## from OpenGL.GLUT.freeglut import *
 
-import threading
-import numpy as np
-import wx
-
 from mwx import FSM
 from .glcamera import Camera
 
-
-N = np.zeros(4)
-R,G,B,A = np.identity(4)
-
-O = np.zeros(3)
-X,Y,Z = np.identity(3)
 
 speckeys = dict(enumerate('abcdefghijklmnopqrstuvwxyz', 1)) # C-[a-z]
 
@@ -346,18 +336,3 @@ class basic_stream(object):
     def OnScrollZoomDown(self, x, y):
         self.camera.zoom(1/1.25)
         glutPostRedisplay()
-
-
-if __name__ == "__main__":
-    import globject as glo
-    import glmaterial as glm
-    
-    print("GLUT =", GLUT)
-    
-    io = basic_stream()
-    frame = io.open('teapot')
-    frame.add_objects([
-        glo.Teapot(frame, shade=glm.silver),
-        glo.Sphere(frame, shade=glm.water, pos=Y, size=0.5),
-    ])
-    io.run()

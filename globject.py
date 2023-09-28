@@ -36,13 +36,12 @@ class Object(object):
     MSHADE = 0x0020
     MALPHA = 0x0040
     
-    def __init__(self, parent, pos=None, shade=None, style=None, visible=True):
-        self.__parent = parent
+    def __init__(self, pos=None, shade=None, style=None, visible=True):
         if pos is None:
             pos = O
         self.pos = pos
         self.shade = shade or white
-        self.style = style or Object.MWIRE | Object.MSOLID | Object.MSHADE
+        self.style = style or self.MWIRE | self.MSOLID | self.MSHADE
         self.visible = visible
     
     def __call__(self):
@@ -50,11 +49,11 @@ class Object(object):
             return
         
         ## set palette type
-        if self.style & Object.MRGBA:
+        if self.style & self.MRGBA:
             glEnable(GL_COLOR_MATERIAL)
             glColor4dv(self.shade)
         
-        elif self.style & Object.MSHADE:
+        elif self.style & self.MSHADE:
             glDisable(GL_COLOR_MATERIAL)
             glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, self.shade.ambient)
             glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, self.shade.diffuse)
@@ -62,7 +61,7 @@ class Object(object):
             glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, self.shade.shininess)
         
         ## begin blend
-        if self.style & Object.MALPHA:
+        if self.style & self.MALPHA:
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         
@@ -70,22 +69,22 @@ class Object(object):
             glPushMatrix()
             glTranslated(*self.pos)
             
-            if self.style & Object.MDOT:
+            if self.style & self.MDOT:
                 glDepthMask(False)
                 self.draw_dots()
             
-            if self.style & Object.MWIRE:
+            if self.style & self.MWIRE:
                 glDepthMask(False)
                 self.draw_line()
             
-            if self.style & Object.MSOLID:
+            if self.style & self.MSOLID:
                 glDepthMask(True)
                 self.draw_face()
         finally:
             glPopMatrix()
         
         ## end blend
-        if self.style & Object.MALPHA:
+        if self.style & self.MALPHA:
             glDisable(GL_BLEND)
     
     def draw_dots(self):
@@ -102,8 +101,8 @@ class Object(object):
 ## --------------------------------
 
 class Sphere(Object):
-    def __init__(self, parent, size=1, **kwargs):
-        Object.__init__(self, parent, **kwargs)
+    def __init__(self, size=1, **kwargs):
+        super().__init__(**kwargs)
         self.size = size
     
     def draw_line(self):
@@ -114,8 +113,8 @@ class Sphere(Object):
 
 
 class Teapot(Object):
-    def __init__(self, parent, size=1, **kwargs):
-        Object.__init__(self, parent, **kwargs)
+    def __init__(self, size=1, **kwargs):
+        super().__init__(**kwargs)
         self.size = size
     
     def draw_line(self):
