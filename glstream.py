@@ -89,6 +89,12 @@ def regulate_key(key):
                .replace("S-C-", "C-S-"))
 
 
+class Event:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class basic_stream:
     """The basic stream
     
@@ -118,7 +124,7 @@ class basic_stream:
         self.__key = ''
         self.__button = ''
         
-        self.handler = FSM({
+        self.handler = FSM({ # DNA<basic_stream>
                 0 : {
                  'home pressed' : (0, self.OnHomePosition),
              '*Lbutton pressed' : (1, self.OnDragBegin),
@@ -142,6 +148,9 @@ class basic_stream:
         )
     
     def open(self):
+        """Open stream.
+        Set context here (double-buffer, depth-test, etc.).
+        """
         ## Create glut window
         glutInitWindowPosition(*self.pos)
         glutInitWindowSize(*self.size)
@@ -217,41 +226,41 @@ class basic_stream:
     def on_key_press(self, key, x, y):
         key = get_hotkey(key)
         self.__key = regulate_key(key + '+')
-        self.handler('{} pressed'.format(key), x, y)
+        self.handler('{} pressed'.format(key), Event(x, y))
     
     def on_key_release(self, key, x, y):
         key = get_hotkey(key)
         self.__key = ''
-        self.handler('{} released'.format(key), x, y)
+        self.handler('{} released'.format(key), Event(x, y))
     
     def on_speckey_press(self, code, x, y):
         key = get_speckey(code)
         self.__key = regulate_key(key + '+')
-        self.handler('{} pressed'.format(key), x, y)
+        self.handler('{} pressed'.format(key), Event(x, y))
     
     def on_speckey_release(self, code, x, y):
         key = get_speckey(code)
         self.__key = ''
-        self.handler('{} released'.format(key), x, y)
+        self.handler('{} released'.format(key), Event(x, y))
     
     def on_mouse(self, button, state, x, y):
         if button >= 3: # wheel
             if state == GLUT_DOWN:
                 p = 'up' if button == 3 else 'down'
-                self.handler('{}wheel{} pressed'.format(self.__key, p), x, y)
+                self.handler('{}wheel{} pressed'.format(self.__key, p), Event(x, y))
             return
         
         btn = self.__key + "LMR"[button] # {0:L,1:M,2:R}
         if state == GLUT_DOWN:
             self.__button = btn
-            self.handler('{}button pressed'.format(btn), x, y)
+            self.handler('{}button pressed'.format(btn), Event(x, y))
         else:
             self.__button = ''
-            self.handler('{}button released'.format(btn), x, y)
+            self.handler('{}button released'.format(btn), Event(x, y))
     
     def on_motion(self, x, y):
         if self.__button:
-            self.handler('{}drag move'.format(self.__button), x, y)
+            self.handler('{}drag move'.format(self.__button), Event(x, y))
     
     def on_visible(self, state):
         if state:
@@ -263,11 +272,12 @@ class basic_stream:
     ## Mouse / Keyboard interface
     ## --------------------------------
     
-    def OnHomePosition(self, x, y):
+    def OnHomePosition(self, evt):
         self.camera.set_axes()
         self.draw()
     
-    def OnDragBegin(self, x, y):
+    def OnDragBegin(self, evt):
+        x, y = evt.x, evt.y
         self._lx = x
         self._ly = y
         self.lcx = self.size[0] / 2
@@ -275,24 +285,27 @@ class basic_stream:
         self.lvx = x - self.lcx
         self.lvy = self.lcy - y
     
-    def OnDragMove(self, x, y):
+    def OnDragMove(self, evt):
+        x, y = evt.x, evt.y
         d = self.dpu / 4
         self.camera.rotate(-(x-self._lx)/d, (y-self._ly)/d)
         self._lx = x
         self._ly = y
         self.draw()
     
-    def OnDragEnd(self, x, y):
+    def OnDragEnd(self, evt):
         self.draw()
     
-    def OnShiftMove(self, x, y):
+    def OnShiftMove(self, evt):
+        x, y = evt.x, evt.y
         d = self.dpu
         self.camera.shift(-(x-self._lx)/d, (y-self._ly)/d)
         self._lx = x
         self._ly = y
         self.draw()
     
-    def OnTiltMove(self, x, y):
+    def OnTiltMove(self, evt):
+        x, y = evt.x, evt.y
         vx = x - self.lcx
         vy = self.lcy - y
         vv = vx*vx + vy*vy
@@ -306,24 +319,26 @@ class basic_stream:
         self.lvy = vy
         self.draw()
     
-    def OnZoomView(self, x, y):
+    def OnZoomView(self, evt):
+        x, y = evt.x, evt.y
         ds = (x-self._lx + self._ly-y) / 100 # zoom
         self.camera.zoom(1 + ds)
         self._lx = x
         self._ly = y
         self.draw()
     
-    def OnZoomFovy(self, x, y):
+    def OnZoomFovy(self, evt):
+        x, y = evt.x, evt.y
         ds = (x-self._lx + self._ly-y) / 100 # angle
         self.camera.magnify(ds)
         self._lx = x
         self._ly = y
         self.draw()
     
-    def OnScrollZoomUp(self, x, y):
+    def OnScrollZoomUp(self, evt):
         self.camera.zoom(1.25)
         self.draw()
     
-    def OnScrollZoomDown(self, x, y):
+    def OnScrollZoomDown(self, evt):
         self.camera.zoom(1/1.25)
         self.draw()
