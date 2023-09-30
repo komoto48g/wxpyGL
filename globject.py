@@ -92,12 +92,13 @@ ruby    = Material([0.1745,   0.01175,  0.01175,  1.0 ],
 
 
 class Object:
-    """Object base class
+    """Object base class.
     
-    Note: Users should override the following functions:
-          draw_dots(self) <- MDOT
-          draw_line(self) <- MWIRE
-          draw_face(self) <- MSOLID
+    Note:
+        Users should override the following functions:
+        - draw_dots(self) <- MDOT
+        - draw_line(self) <- MWIRE
+        - draw_face(self) <- MSOLID
     """
     ## Mesh frame_style
     MDOT   = 0x0001

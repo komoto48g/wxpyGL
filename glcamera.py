@@ -17,17 +17,17 @@ class Camera:
     """Camera object.
     
     Attributes:
-        parent  : stream object
-        mode    : [0]-orthogonal [1]-perspective 
-        fovy_   : fov-y angle [rad]
-        e2c_    : logical camera length
-        h2_     : logical half height of view (h/2)
-        axes[3,3]: logical base-axes (x,y,z)
-        eye[3]  : logical eye point (z)
-        lpc[3]  : logical look-at center (o)
-        depth[2]: logical focus (near, far)
-        screen[2]: screen size of viewport (w, h)
-        fovy_range[2]: field of view in y-direction
+        parent    : stream object
+        mode      : projection {0:orthogonal, 1:perspective}
+        fovy_     : fov-y angle [rad]
+        e2c_      : logical camera length
+        h2_       : logical half height of view (h/2)
+        axes[3,3] : logical base-axes (x,y,z)
+        eye[3]    : logical pupil point (z)
+        lpc[3]    : logical object center (o)
+        depth[2]  : logical focus (near, far)
+        screen[2] : screen size of viewport (w, h)
+        fovy_range: fov-y angle range
     """
     ## fov = property(lambda self: self.__parent.size)
     ## fovr = property(lambda self: self.fov[0] / self.fov[1])
@@ -82,7 +82,7 @@ class Camera:
         gluLookAt(e[0], e[1], e[2], c[0], c[1], c[2], y[0], y[1], y[2])
     
     def rotate(self, dx, dy):
-        """calc_eye"""
+        """Rotate camera pupil point."""
         x, y = self.axes[0:2]
         v = (self.eye - self.lpc) + (x * dx + y * dy)
         z = v / linalg.norm(v)
@@ -93,7 +93,7 @@ class Camera:
         return True
     
     def shift(self, dx, dy):
-        """calc_lpc"""
+        """Shift camera pupil point."""
         x, y = self.axes[0:2]
         v = (self.eye - self.lpc) - (x * dx + y * dy)
         z = v / linalg.norm(v)
@@ -104,14 +104,14 @@ class Camera:
         return True
     
     def tilt(self, dt):
-        """rotate xyaxis dt rad"""
+        """Tilt xy-axis by dt [rad]."""
         x, y = self.axes[0:2]
         self.axes[0] =  x * cos(dt) + y * sin(dt)
         self.axes[1] = -x * sin(dt) + y * cos(dt)
         return True
     
     def zoom(self, rate):
-        """shorten camera length by rate"""
+        """Zoom camera length at rate."""
         L = self.e2c_ / rate
         if self.depth[0] < L < self.depth[1]:
             self.eye += self.axes[2] * (L - self.e2c_)
@@ -119,7 +119,7 @@ class Camera:
             return True
     
     def magnify(self, angle):
-        """add to fovy angle"""
+        """Change fovy angle [rad] (perspective mode only)."""
         if not self.mode:
             return
         f = self.fovy_ + angle
