@@ -100,24 +100,19 @@ class basic_stream:
     
     Attributes:
         name    : window title
-        pos[2]  : window position (x, y)
-        size[2] : window size (width, height)
-        color[4]: back color
         camera  : singlet camera model
+        objects : list <Object> to draw
     """
     @property
     def dpu(self):
         """Dots per unit:logical length."""
-        return self.size[1] / 2 / self.camera.h2_
+        return self._size[1] / 2 / self.camera.h2_
     
-    def __init__(self, name, pos=None, size=None, color=None):
+    def __init__(self, name):
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
         
         self.name = name.encode()
-        self.pos = pos or (0, 0)
-        self.size = size or (300, 300)
-        self.color = color or (0, 0, 0, 0)
         self.camera = Camera(self)
         self.objects = []
         
@@ -152,8 +147,6 @@ class basic_stream:
         Set context here (double-buffer, depth-test, etc.).
         """
         ## Create glut window
-        glutInitWindowPosition(*self.pos)
-        glutInitWindowSize(*self.size)
         glutCreateWindow(self.name)
         
         ## glut event handlers
@@ -168,8 +161,6 @@ class basic_stream:
         glutVisibilityFunc(self.on_visible)
         glutWMCloseFunc(self.close)
         glutIdleFunc(None)
-        
-        glClearColor(*self.color)
         
         ## culling
         glCullFace(GL_BACK)
@@ -207,12 +198,12 @@ class basic_stream:
         glutPostRedisplay()
     
     ## --------------------------------
-    ## glut event handlers
+    ## GL/GLUT event handlers
     ## --------------------------------
     
     def on_display(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        w, h = self.size
+        w, h = self._size
         if w and h:
             self.camera.set_view(w, h)
             for obj in self.objects: # draw objects
@@ -220,7 +211,7 @@ class basic_stream:
             glutSwapBuffers()
     
     def on_reshape(self, w, h):
-        self.size = (w, h)
+        self._size = (w, h)
         glViewport(0, 0, w, h) # --> single viewport region
     
     def on_key_press(self, key, x, y):
@@ -280,8 +271,8 @@ class basic_stream:
         x, y = evt.x, evt.y
         self._lx = x
         self._ly = y
-        self.lcx = self.size[0] / 2
-        self.lcy = self.size[1] / 2
+        self.lcx = self._size[0] / 2
+        self.lcy = self._size[1] / 2
         self.lvx = x - self.lcx
         self.lvy = self.lcy - y
     
