@@ -3,7 +3,6 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-## from OpenGL.GLUT.freeglut import *
 
 import copy
 import numpy as np

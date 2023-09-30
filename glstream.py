@@ -3,7 +3,6 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-## from OpenGL.GLUT.freeglut import *
 
 from mwx import FSM
 from .glcamera import Camera
@@ -139,7 +138,6 @@ class basic_stream:
             '*Rbutton released' : (0, self.OnDragEnd),
                 },
             },
-            default = 0,
         )
     
     def open(self):
@@ -150,8 +148,8 @@ class basic_stream:
         glutCreateWindow(self.name)
         
         ## glut event handlers
-        glutDisplayFunc(self.on_display)
         glutReshapeFunc(self.on_reshape)
+        glutDisplayFunc(self.on_display)
         glutKeyboardFunc(self.on_key_press)
         glutKeyboardUpFunc(self.on_key_release)
         glutSpecialFunc(self.on_speckey_press)
@@ -186,9 +184,7 @@ class basic_stream:
     
     def run(self):
         glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
-                      ## GLUT_ACTION_CONTINUE_EXECUTION,
-                      GLUT_ACTION_GLUTMAINLOOP_RETURNS,
-                      )
+                      GLUT_ACTION_GLUTMAINLOOP_RETURNS)
         glutMainLoop()
     
     def close(self):
@@ -198,8 +194,12 @@ class basic_stream:
         glutPostRedisplay()
     
     ## --------------------------------
-    ## GL/GLUT event handlers
+    ## GLUT event handlers
     ## --------------------------------
+    
+    def on_reshape(self, w, h):
+        self._size = (w, h)
+        glViewport(0, 0, w, h) # --> single viewport region
     
     def on_display(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -209,10 +209,6 @@ class basic_stream:
             for obj in self.objects: # draw objects
                 obj()
             glutSwapBuffers()
-    
-    def on_reshape(self, w, h):
-        self._size = (w, h)
-        glViewport(0, 0, w, h) # --> single viewport region
     
     def on_key_press(self, key, x, y):
         key = get_hotkey(key)
